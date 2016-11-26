@@ -63,6 +63,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Camera\Aspect.cs" />
+    <Compile Include="Assets\Camera\MoveCamera.cs" />
+    <Compile Include="Assets\LevelEditor\Code\LevelEditorController.cs" />
+    <Compile Include="Assets\LevelEditor\Code\LevelLoader.cs" />
+    <Compile Include="Assets\LevelEditor\Code\SetActiveTile.cs" />
+    <Compile Include="Assets\LevelEditor\Code\Tile.cs" />
     <Compile Include="Assets\Menu\Code\Effects\DotDotDot.cs" />
     <Compile Include="Assets\Menu\Code\Effects\Flash.cs" />
     <Compile Include="Assets\Menu\Code\Effects\LoadingSegmentManager.cs" />
