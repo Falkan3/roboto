@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -7,6 +7,7 @@ public class MoveCamera : MonoBehaviour {
     public int speed;
     private bool disabled = false;
     Vector2 moveVector;
+    private InputField[] listOfUiControls;
 
     public float scrollsensitivity;
 
@@ -15,6 +16,7 @@ public class MoveCamera : MonoBehaviour {
     // Use this for initialization
     void Start () {
         //mainInputField = GameObject.Find("InputField");
+        listOfUiControls = GameObject.FindObjectsOfType(typeof(InputField)) as InputField[];
     }
 	
 	// Update is called once per frame
@@ -26,15 +28,11 @@ public class MoveCamera : MonoBehaviour {
 
         if (isWalking && disabled==false)
         {
-            /*
-            if (mainInputField.GetComponent<InputField>().isFocused == false)
+            if (checkIfUiHasFocus())
             {
                 moveVector = new Vector2(input_x, input_y).normalized * speed * Time.deltaTime;
                 transform.Translate(moveVector);
             }
-            */
-            moveVector = new Vector2(input_x, input_y).normalized * speed * Time.deltaTime;
-            transform.Translate(moveVector);
         }
 
         if (!EventSystem.current.IsPointerOverGameObject())
@@ -49,5 +47,15 @@ public class MoveCamera : MonoBehaviour {
     public void enableMovement()
     {
         disabled = false;
+    }
+
+    public bool checkIfUiHasFocus()
+    {
+        foreach(InputField item in listOfUiControls)
+        {
+            if (item.isFocused)
+                return false;
+        }
+        return true;
     }
 }

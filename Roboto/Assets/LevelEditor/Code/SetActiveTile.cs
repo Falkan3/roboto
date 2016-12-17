@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class SetActiveTile : MonoBehaviour {
     public int index;
     public GameObject tile;
-    private Button button;
     private LevelEditorController editor;
 
     void Start () {

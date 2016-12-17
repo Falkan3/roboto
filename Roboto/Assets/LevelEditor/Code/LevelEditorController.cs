@@ -16,6 +16,7 @@ public class LevelEditorController : MonoBehaviour {
     private int tileLayer = 0;
     private short tileRotation = 0;
     List<GameObject> tileButtons = new List<GameObject>();
+    List<SetActiveTile> tileScriptList = new List<SetActiveTile>();
     private int prefTileListIndex = 0;
     private int activeTileIndex;
     private GameObject activeObject; //active tile to place
@@ -26,9 +27,9 @@ public class LevelEditorController : MonoBehaviour {
         public GameObject editorTexture;
             private SpriteRenderer editorTextureRenderer;
             private Sprite editorDefaultSprite;
-            private GameObject editorTexture_empty;
-        //LevelBoundsTexture
-        public GameObject editorBoundsTexture;
+            private Color editorDefaultColor;
+            //LevelBoundsTexture
+            public GameObject editorBoundsTexture;
             private Vector2 editorBoundsTextureScale;
     private Bounds mainCameraBounds;
     private GameObject navigationPanel;
@@ -63,7 +64,14 @@ public class LevelEditorController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         moveEditorTexture();
-	}
+
+        if (Input.GetMouseButtonDown(0)) Debug.Log("Pressed left click.");
+        if (Input.GetMouseButtonDown(1))
+        {
+            ResetActiveTile();
+        }
+        if (Input.GetMouseButtonDown(2)) Debug.Log("Pressed middle click.");
+    }
 
     void moveEditorTexture()
     {
@@ -95,6 +103,10 @@ public class LevelEditorController : MonoBehaviour {
         coordinatesText = GameObject.Find("CoordinatesText").GetComponent<Text>();
         layerText = GameObject.Find("LayerText").GetComponent<Text>();
 
+        editorTextureRenderer = editorTexture.GetComponent<SpriteRenderer>();
+        editorDefaultSprite = editorTextureRenderer.sprite;
+        editorDefaultColor = editorTextureRenderer.color;
+
         initializeTileSelector();
     }
 
@@ -113,6 +125,14 @@ public class LevelEditorController : MonoBehaviour {
             tileButtons.Add(newTile);
         }
 
+        //Populate setactivetile scripts of each tile button object
+        tileScriptList.Clear();
+        for (int i = 0; i < tileButtons.Count; i++)
+        {
+            tileScriptList.Add(tileButtons[i].GetComponent<SetActiveTile>());
+        }
+        prefTileListIndex = 0;
+
         populateTileSelector();
     }
 
@@ -120,15 +140,14 @@ public class LevelEditorController : MonoBehaviour {
     {
         for (int i = 0; i < tileButtons.Count; i++)
         {
-
-            SetActiveTile script = tileButtons[i].GetComponent<SetActiveTile>();
-            script.index = prefTileListIndex + i;
+            tileScriptList[i].index = prefTileListIndex + i;
 
             if (prefTileListIndex + i < levelLoader.prefabTilesList.Count)
-                script.changeSelf(levelLoader.prefabTilesList[prefTileListIndex]);
+                tileScriptList[i].changeSelf(levelLoader.prefabTilesList[prefTileListIndex]);
             else
-                script.resetSelf();
+                tileScriptList[i].resetSelf();
         }
+        Debug.Log("index in list:" + prefTileListIndex + " number of prefabs found: " + levelLoader.prefabTilesList.Count);
     }
 
     public void changeListIndex()
@@ -141,7 +160,7 @@ public class LevelEditorController : MonoBehaviour {
             prefTileListIndex = 0;
         populateTileSelector();
 
-        Debug.Log(prefTileListIndex);
+        Debug.Log("index in list:" + prefTileListIndex);
     }
 
     //Editor Methods ------------------------------------------------------------------>
@@ -197,9 +216,22 @@ public class LevelEditorController : MonoBehaviour {
         activeTileIndex = ind;
         activeObject = obj;
         SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
-        editorTextureRenderer.color = newSprite.color;
+        Debug.Log("selected tile with index: " + ind + " obj: " + obj.name + " sprite renderer: " + newSprite.sprite);
+        editorTexture.transform.localScale = new Vector3(1, 1, 1);
         editorTextureRenderer.sprite = newSprite.sprite;
+        editorTextureRenderer.color = newSprite.color;
 
         tileRotation = 0;
+    }
+
+    public void ResetActiveTile()
+    {
+        activeTileIndex = -1;
+        activeObject = null;
+        editorTexture.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+        editorTextureRenderer.sprite = editorDefaultSprite;
+        editorTextureRenderer.color = editorDefaultColor;
+
+        Debug.Log("Resetting editor tile to: " + editorDefaultSprite + " " + editorDefaultColor);
     }
 }
