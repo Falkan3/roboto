@@ -3,8 +3,8 @@ using System.Collections;
 using UnityEngine.UI;
 
 public class SetActiveTile : MonoBehaviour {
-    public int index;
-    public GameObject tile;
+    private int index;
+    private GameObject tile;
     private LevelEditorController editor;
 
     void Start () {
@@ -26,5 +26,31 @@ public class SetActiveTile : MonoBehaviour {
     {
         tile = null;
         GetComponent<Button>().image.sprite = null;
+    }
+
+    public int Index
+    {
+        get
+        {
+            return index;
+        }
+
+        set
+        {
+            index = value;
+        }
+    }
+
+    public GameObject Tile
+    {
+        get
+        {
+            return tile;
+        }
+
+        set
+        {
+            tile = value;
+        }
     }
 }

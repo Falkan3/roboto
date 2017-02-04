@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 public class LevelEditorController : MonoBehaviour {
     //General
@@ -18,8 +19,10 @@ public class LevelEditorController : MonoBehaviour {
     List<GameObject> tileButtons = new List<GameObject>();
     List<SetActiveTile> tileScriptList = new List<SetActiveTile>();
     private int prefTileListIndex = 0;
-    private int activeTileIndex;
+    //active tile
+    private int activeTileIndex = -1;
     private GameObject activeObject; //active tile to place
+    private EditorTile activeObjectProperties;
 
     //EditorUI
     private Vector2 ray;
@@ -46,8 +49,8 @@ public class LevelEditorController : MonoBehaviour {
     //Tile object in prefab panel
     public GameObject menutile;
     int editorTileCount;
-    //List of tiles in level
-    List<Tile> levelTiles = new List<Tile>();
+    //List of tiles in level, it stores the tile class object and corresponding gameobject
+    public List<CombinedTile> levelTiles = new List<CombinedTile>();
     //the list of available prefabs is contained in LevelLoader
 
 
@@ -65,7 +68,14 @@ public class LevelEditorController : MonoBehaviour {
 	void Update () {
         moveEditorTexture();
 
-        if (Input.GetMouseButtonDown(0)) Debug.Log("Pressed left click.");
+        if (Input.GetMouseButtonDown(0))
+        {
+            Debug.Log("Pressed left click.");
+            if(!EventSystem.current.IsPointerOverGameObject())
+            {
+                PlaceTile();
+            }
+        }
         if (Input.GetMouseButtonDown(1))
         {
             ResetActiveTile();
@@ -140,7 +150,7 @@ public class LevelEditorController : MonoBehaviour {
     {
         for (int i = 0; i < tileButtons.Count; i++)
         {
-            tileScriptList[i].index = prefTileListIndex + i;
+            tileScriptList[i].Index = prefTileListIndex + i;
 
             if (prefTileListIndex + i < levelLoader.prefabTilesList.Count)
                 tileScriptList[i].changeSelf(levelLoader.prefabTilesList[prefTileListIndex]);
@@ -215,6 +225,7 @@ public class LevelEditorController : MonoBehaviour {
     {
         activeTileIndex = ind;
         activeObject = obj;
+        activeObjectProperties = obj.GetComponent<TileInitiator>().tile;
         SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
         Debug.Log("selected tile with index: " + ind + " obj: " + obj.name + " sprite renderer: " + newSprite.sprite);
         editorTexture.transform.localScale = new Vector3(1, 1, 1);
@@ -233,5 +244,84 @@ public class LevelEditorController : MonoBehaviour {
         editorTextureRenderer.color = editorDefaultColor;
 
         Debug.Log("Resetting editor tile to: " + editorDefaultSprite + " " + editorDefaultColor);
+    }
+
+    public void PlaceTile()
+    {
+        if (activeTileIndex != -1 && activeObject != null)
+        {
+            if (editorTexture.transform.position.x >= Mathf.Ceil(levelWidth / -2 + 0.5f) &&
+                editorTexture.transform.position.x <= Mathf.Ceil(levelWidth / 2 - 0.5f) &&
+                editorTexture.transform.position.y <= Mathf.Ceil(levelHeight / 2 - 0.5f) &&
+                editorTexture.transform.position.y >= Mathf.Ceil(levelHeight / -2 + 0.5f))
+            {
+                CombinedTile temp = levelTiles.Where(obj => obj.Tile.X == (int)ray.x && obj.Tile.Y == (int)ray.y && obj.Tile.Layer == tileLayer).SingleOrDefault<CombinedTile>();
+                if (temp == null)
+                {
+                    temp = new CombinedTile();
+                    temp.Tile = new Tile(activeObject, activeObject.name, tileRotation, tileLayer, (int)ray.x, (int)ray.y, activeObjectProperties.Dimensions, activeObjectProperties.Category);
+                    temp.GameObject = Instantiate(activeObject);
+                    temp.GameObject.transform.position = new Vector2(ray.x, ray.y);
+                    levelTiles.Add(temp);
+
+                    Debug.Log("Tile placed at " + ray.x + " " + ray.y + " layer: " + tileLayer);
+                    Debug.Log("Number of tiles saved: " + levelTiles.Count);
+                }
+                else
+                {
+                    Debug.Log("Tile already exists. Overwriting...");
+
+                    Destroy(temp.GameObject);
+                    temp.Tile = new Tile(activeObject, activeObject.name, tileRotation, tileLayer, (int)ray.x, (int)ray.y, activeObjectProperties.Dimensions, activeObjectProperties.Category);
+                    temp.GameObject = Instantiate(activeObject);
+                    temp.GameObject.transform.position = new Vector2(ray.x, ray.y);
+
+                    Debug.Log("Tile replaced at " + ray.x + " " + ray.y + " layer: " + tileLayer);
+                    Debug.Log("Number of tiles saved: " + levelTiles.Count);
+                }
+            }
+            else
+            {
+                Debug.Log("Editor texture is out of level bounds.");
+            }
+        }
+    }
+}
+
+public class CombinedTile
+{
+    private Tile tile;
+    private GameObject gameObject;
+
+    public CombinedTile()
+    {
+        tile = null;
+        gameObject = null;
+    }
+
+    public Tile Tile
+    {
+        get
+        {
+            return tile;
+        }
+
+        set
+        {
+            tile = value;
+        }
+    }
+
+    public GameObject GameObject
+    {
+        get
+        {
+            return gameObject;
+        }
+
+        set
+        {
+            gameObject = value;
+        }
     }
 }
