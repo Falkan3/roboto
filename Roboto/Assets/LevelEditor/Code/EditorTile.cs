@@ -4,6 +4,9 @@ using UnityEngine;
 
 [System.Serializable]
 public class EditorTile {
+    //Tile index (for saving/loading)
+    [SerializeField]
+    private int index = -1;
     //Tile name; Default none
     [SerializeField]
     private string name;
@@ -55,6 +58,19 @@ public class EditorTile {
         set
         {
             category = value;
+        }
+    }
+
+    public int Index
+    {
+        get
+        {
+            return index;
+        }
+
+        set
+        {
+            index = value;
         }
     }
 }

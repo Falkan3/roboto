@@ -4,6 +4,13 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using UnityEditor;
+using System.Runtime.Serialization;
+using System.Xml.Linq;
+using System.Text;
+using System.Xml.Serialization;
 
 public class LevelEditorController : MonoBehaviour {
     //General
@@ -21,6 +28,7 @@ public class LevelEditorController : MonoBehaviour {
     private int prefTileListIndex = 0;
     //active tile
     private int activeTileIndex = -1;
+    private int activeObjectIndex = -1;
     private GameObject activeObject; //active tile to place
     private EditorTile activeObjectProperties;
 
@@ -79,6 +87,7 @@ public class LevelEditorController : MonoBehaviour {
         if (Input.GetMouseButtonDown(1))
         {
             ResetActiveTile();
+            RemoveTile();
         }
         if (Input.GetMouseButtonDown(2)) Debug.Log("Pressed middle click.");
     }
@@ -153,7 +162,7 @@ public class LevelEditorController : MonoBehaviour {
             tileScriptList[i].Index = prefTileListIndex + i;
 
             if (prefTileListIndex + i < levelLoader.prefabTilesList.Count)
-                tileScriptList[i].changeSelf(levelLoader.prefabTilesList[prefTileListIndex]);
+                tileScriptList[i].changeSelf(levelLoader.prefabTilesList[i], levelLoader.prefabTilesList[i].GetComponent<TileInitiator>().tile.Index);
             else
                 tileScriptList[i].resetSelf();
         }
@@ -162,10 +171,9 @@ public class LevelEditorController : MonoBehaviour {
 
     public void changeListIndex()
     {
-
         prefTileListIndex -= (int)(Input.GetAxis("Mouse ScrollWheel") * 10);
-        if (prefTileListIndex > levelLoader.prefabTilesList.Count - 1)
-            prefTileListIndex = levelLoader.prefabTilesList.Count - 1;
+        if (prefTileListIndex > levelLoader.prefabTilesList.Count)
+            prefTileListIndex = levelLoader.prefabTilesList.Count;
         else if (prefTileListIndex < 0)
             prefTileListIndex = 0;
         populateTileSelector();
@@ -221,13 +229,14 @@ public class LevelEditorController : MonoBehaviour {
         resizeLevelBoundaries();
     }
 
-    public void ChangeActiveTile(int ind, GameObject obj)
+    public void ChangeActiveTile(int ind, GameObject obj, int tileIndex)
     {
         activeTileIndex = ind;
         activeObject = obj;
+        activeObjectIndex = tileIndex;
         activeObjectProperties = obj.GetComponent<TileInitiator>().tile;
         SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
-        Debug.Log("selected tile with index: " + ind + " obj: " + obj.name + " sprite renderer: " + newSprite.sprite);
+        Debug.Log("selected tile with index: " + ind + " obj: " + obj.name + " sprite renderer: " + newSprite.sprite + " tile index: " + activeObjectIndex);
         editorTexture.transform.localScale = new Vector3(1, 1, 1);
         editorTextureRenderer.sprite = newSprite.sprite;
         editorTextureRenderer.color = newSprite.color;
@@ -237,18 +246,43 @@ public class LevelEditorController : MonoBehaviour {
 
     public void ResetActiveTile()
     {
-        activeTileIndex = -1;
-        activeObject = null;
-        editorTexture.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-        editorTextureRenderer.sprite = editorDefaultSprite;
-        editorTextureRenderer.color = editorDefaultColor;
+        if(activeTileIndex != -1)
+        {
+            activeTileIndex = -1;
+            activeObject = null;
+            activeObjectIndex = -1;
+            editorTexture.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+            editorTextureRenderer.sprite = editorDefaultSprite;
+            editorTextureRenderer.color = editorDefaultColor;
 
-        Debug.Log("Resetting editor tile to: " + editorDefaultSprite + " " + editorDefaultColor);
+            Debug.Log("Resetting editor tile to: " + editorDefaultSprite + " " + editorDefaultColor);
+        }
+    }
+
+    public void RemoveTile()
+    {
+        if(activeTileIndex == -1)
+        {
+            int temp = levelTiles.FindIndex(obj => obj.Tile.X == (int)ray.x && obj.Tile.Y == (int)ray.y && obj.Tile.Layer == tileLayer);
+            if (temp != -1)
+            {
+                Debug.Log("Tile found. Removing...");
+
+                Destroy(levelTiles[temp].GameObject);
+                levelTiles.RemoveAt(temp);
+
+                Debug.Log("Tile removed at " + ray.x + " " + ray.y + " layer: " + tileLayer);
+            }
+            else
+            {
+                Debug.Log("Tile not found in given layer " + tileLayer);
+            }
+        }
     }
 
     public void PlaceTile()
     {
-        if (activeTileIndex != -1 && activeObject != null)
+        if (activeTileIndex != -1 && activeObject != null && activeObjectIndex != -1)
         {
             if (editorTexture.transform.position.x >= Mathf.Ceil(levelWidth / -2 + 0.5f) &&
                 editorTexture.transform.position.x <= Mathf.Ceil(levelWidth / 2 - 0.5f) &&
@@ -258,8 +292,8 @@ public class LevelEditorController : MonoBehaviour {
                 CombinedTile temp = levelTiles.Where(obj => obj.Tile.X == (int)ray.x && obj.Tile.Y == (int)ray.y && obj.Tile.Layer == tileLayer).SingleOrDefault<CombinedTile>();
                 if (temp == null)
                 {
-                    temp = new CombinedTile();
-                    temp.Tile = new Tile(activeObject, activeObject.name, tileRotation, tileLayer, (int)ray.x, (int)ray.y, activeObjectProperties.Dimensions, activeObjectProperties.Category);
+                    temp = new CombinedTile(null, null);
+                    temp.Tile = new Tile(activeObjectIndex, activeObject, activeObject.name, tileRotation, tileLayer, (int)ray.x, (int)ray.y, activeObjectProperties.Dimensions, activeObjectProperties.Category);
                     temp.GameObject = Instantiate(activeObject);
                     temp.GameObject.transform.position = new Vector2(ray.x, ray.y);
                     levelTiles.Add(temp);
@@ -272,7 +306,7 @@ public class LevelEditorController : MonoBehaviour {
                     Debug.Log("Tile already exists. Overwriting...");
 
                     Destroy(temp.GameObject);
-                    temp.Tile = new Tile(activeObject, activeObject.name, tileRotation, tileLayer, (int)ray.x, (int)ray.y, activeObjectProperties.Dimensions, activeObjectProperties.Category);
+                    temp.Tile = new Tile(activeObjectIndex, activeObject, activeObject.name, tileRotation, tileLayer, (int)ray.x, (int)ray.y, activeObjectProperties.Dimensions, activeObjectProperties.Category);
                     temp.GameObject = Instantiate(activeObject);
                     temp.GameObject.transform.position = new Vector2(ray.x, ray.y);
 
@@ -286,17 +320,167 @@ public class LevelEditorController : MonoBehaviour {
             }
         }
     }
+
+    public void ClearLevelTiles()
+    {
+        foreach(CombinedTile item in levelTiles)
+        {
+            Destroy(item.GameObject);
+        }
+        levelTiles.Clear();
+    }
+
+    public void SaveMap()
+    {
+        if (!string.IsNullOrEmpty(mapname))
+        {
+            List<SerializableTile> temp = new List<SerializableTile>();
+            foreach(CombinedTile item in levelTiles)
+            {
+                SerializableTile tempTile = new SerializableTile(item.Tile.Index, item.Tile.Name, item.Tile.Rotation, item.Tile.Layer, item.Tile.X, item.Tile.Y, item.Tile.Dimensions, item.Tile.Category);
+                temp.Add(tempTile);
+            }
+            CompleteLevel cl = new CompleteLevel(new MapInfo(mapname, levelWidth, levelHeight), temp);
+
+            FileStream fStream = File.Create(Application.dataPath + "/Levels/" + mapname + ".xml");
+
+            //Serialize to xml
+            DataContractSerializer bf = new DataContractSerializer(cl.GetType());
+            MemoryStream streamer = new MemoryStream();
+
+            //Serialize the file
+            bf.WriteObject(streamer, cl);
+            streamer.Seek(0, SeekOrigin.Begin);
+
+            //Save to disk
+            fStream.Write(streamer.GetBuffer(), 0, streamer.GetBuffer().Length);
+
+            // Close the file to prevent any corruptions
+            fStream.Close();
+
+            string result = XElement.Parse(Encoding.ASCII.GetString(streamer.GetBuffer()).Replace("\0", "")).ToString();
+            Debug.Log("Saved level. Serialized Result: " + result);
+        }
+        else
+            Debug.Log("Map name can't be empty in order to save it.");
+    }
+
+    public void LoadMap()
+    {
+        try
+        {
+            string loadfilepath = EditorUtility.OpenFilePanel("Load a main map", Application.dataPath + "/Levels", "xml");
+            Debug.Log("Loading level: " + loadfilepath);
+
+            if (File.Exists(loadfilepath))
+            {
+                FileStream fStream = File.Open(loadfilepath, FileMode.Open, System.IO.FileAccess.Read);
+
+                //Deserialize from xml
+                DataContractSerializer serializer = new DataContractSerializer(typeof(CompleteLevel), null, 1000, false, true, null);
+                CompleteLevel cl = serializer.ReadObject(fStream) as CompleteLevel;
+                fStream.Close();
+
+                SetMapName(cl.MapInfo.MapName);
+                ChangeLevelWidth(cl.MapInfo.MapWidth.ToString());
+                ChangeLevelHeight(cl.MapInfo.MapHeight.ToString());
+                ApplySettings();
+                ClearLevelTiles();
+                List<SerializableTile> temp = cl.MapTiles;
+                foreach(SerializableTile item in temp)
+                {
+                    Tile tempTile = new Tile(item.Index, levelLoader.tileIndexer[item.Index].Obj, item.Name, item.Rotation, item.Layer, item.X, item.Y, item.Dimensions, item.Category);
+                    levelTiles.Add(new CombinedTile(tempTile, null));
+                }
+
+                levelLoader.LoadLevel(levelTiles);
+
+                Debug.Log("Loaded " + loadfilepath);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.Log("Failure during loading the level. Error: " + ex);
+        }
+    }
 }
 
+[DataContract]
+public class MapInfo
+{
+    [DataMember]
+    private string mapName;
+    [DataMember]
+    private int mapWidth;
+    [DataMember]
+    private int mapHeight;
+
+    public MapInfo(string mapName, int mapWidth, int mapHeight)
+    {
+        this.mapName = mapName;
+        this.mapWidth = mapWidth;
+        this.mapHeight = mapHeight;
+    }
+    public MapInfo()
+    {
+    }
+
+    public string MapName
+    {
+        get
+        {
+            return mapName;
+        }
+
+        set
+        {
+            mapName = value;
+        }
+    }
+
+    public int MapWidth
+    {
+        get
+        {
+            return mapWidth;
+        }
+
+        set
+        {
+            mapWidth = value;
+        }
+    }
+
+    public int MapHeight
+    {
+        get
+        {
+            return mapHeight;
+        }
+
+        set
+        {
+            mapHeight = value;
+        }
+    }
+}
+[DataContract]
 public class CombinedTile
 {
+    [DataMember]
     private Tile tile;
+    [DataMember]
     private GameObject gameObject;
 
+    public CombinedTile(Tile tile, GameObject gameObject)
+    {
+        this.tile = tile;
+        this.gameObject = gameObject;
+    }
     public CombinedTile()
     {
-        tile = null;
-        gameObject = null;
+        this.tile = null;
+        this.gameObject = null;
     }
 
     public Tile Tile
@@ -322,6 +506,198 @@ public class CombinedTile
         set
         {
             gameObject = value;
+        }
+    }
+}
+[DataContract]
+public class SerializableTile
+{
+    //Tile index (for saving/loading purposes)
+    [DataMember]
+    private int index;
+    //Tile name; Default none
+    [DataMember]
+    private string name;
+    //The way the object is rotated; Default 0, right =>
+    [DataMember]
+    private short rotation = 0;
+    //Layer the tile is in; Default: 0 =>
+    [DataMember]
+    private int layer = 0;
+    //Coordinates
+    [DataMember]
+    private int x;
+    [DataMember]
+    private int y;
+    //Boundaries of tile, for example 1x1, 4x2; Default 1x1
+    [DataMember]
+    private short[] dimensions = new short[2] { 1, 1 };
+    //Category; Default none
+    [DataMember]
+    private string category;
+
+    public SerializableTile(int index, string name, short rotation, int layer, int x, int y, short[] dimensions, string category)
+    {
+        this.index = index;
+        this.name = name;
+        this.rotation = rotation;
+        this.layer = layer;
+        this.x = x;
+        this.y = y;
+        this.dimensions = dimensions;
+        this.category = category;
+    }
+    public SerializableTile()
+    {
+
+    }
+
+    public int Index
+    {
+        get
+        {
+            return index;
+        }
+
+        set
+        {
+            index = value;
+        }
+    }
+
+    public string Name
+    {
+        get
+        {
+            return name;
+        }
+
+        set
+        {
+            name = value;
+        }
+    }
+
+    public short Rotation
+    {
+        get
+        {
+            return rotation;
+        }
+
+        set
+        {
+            rotation = value;
+        }
+    }
+
+    public int Layer
+    {
+        get
+        {
+            return layer;
+        }
+
+        set
+        {
+            layer = value;
+        }
+    }
+
+    public int X
+    {
+        get
+        {
+            return x;
+        }
+
+        set
+        {
+            x = value;
+        }
+    }
+
+    public int Y
+    {
+        get
+        {
+            return y;
+        }
+
+        set
+        {
+            y = value;
+        }
+    }
+
+    public short[] Dimensions
+    {
+        get
+        {
+            return dimensions;
+        }
+
+        set
+        {
+            dimensions = value;
+        }
+    }
+
+    public string Category
+    {
+        get
+        {
+            return category;
+        }
+
+        set
+        {
+            category = value;
+        }
+    }
+}
+[DataContract]
+public class CompleteLevel
+{
+    [DataMember]
+    private MapInfo mapInfo;
+    [DataMember]
+    private List<SerializableTile> mapTiles;
+
+    public CompleteLevel(MapInfo mapInfo, List<SerializableTile> mapTiles)
+    {
+        this.MapInfo = mapInfo;
+        this.MapTiles = mapTiles;
+    }
+    public CompleteLevel()
+    {
+        this.MapInfo = null;
+        this.MapTiles = null;
+    }
+
+    public MapInfo MapInfo
+    {
+        get
+        {
+            return mapInfo;
+        }
+
+        set
+        {
+            mapInfo = value;
+        }
+    }
+
+    public List<SerializableTile> MapTiles
+    {
+        get
+        {
+            return mapTiles;
+        }
+
+        set
+        {
+            mapTiles = value;
         }
     }
 }

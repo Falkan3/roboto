@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class SetActiveTile : MonoBehaviour {
     private int index;
+    private int tileIndex;
     private GameObject tile;
     private LevelEditorController editor;
 
@@ -13,18 +14,20 @@ public class SetActiveTile : MonoBehaviour {
 
     public void setTile()
     {
-        editor.ChangeActiveTile(index, tile);
+        editor.ChangeActiveTile(index, tile, tileIndex);
     }
 
-    public void changeSelf(GameObject obj)
+    public void changeSelf(GameObject obj, int tileIndex)
     {
         tile = obj;
         Debug.Log(obj.name);
         GetComponent<Button>().image.sprite = obj.GetComponent<SpriteRenderer>().sprite;
+        this.tileIndex = tileIndex;
     }
     public void resetSelf()
     {
         tile = null;
+        tileIndex = -1;
         GetComponent<Button>().image.sprite = null;
     }
 
@@ -51,6 +54,19 @@ public class SetActiveTile : MonoBehaviour {
         set
         {
             tile = value;
+        }
+    }
+
+    public int TileIndex
+    {
+        get
+        {
+            return tileIndex;
+        }
+
+        set
+        {
+            tileIndex = value;
         }
     }
 }
