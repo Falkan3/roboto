@@ -221,6 +221,20 @@ public class LevelEditorController : MonoBehaviour {
         {
             int.TryParse(layer, out tileLayer);
             layerText.text = "Layer: " + tileLayer;
+            //CombinedTile[] temp = levelTiles.Where(obj => obj.Tile.X == (int)ray.x && obj.Tile.Y == (int)ray.y && obj.Tile.Layer == tileLayer);
+            foreach(var obj in levelTiles)
+            {
+                SpriteRenderer sr = obj.GameObject.GetComponent<SpriteRenderer>();
+                sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, 1f);
+            }
+            var temp = from obj in levelTiles
+                                      where obj.Tile.Layer != tileLayer
+                                      select obj;
+            foreach (var obj in temp)
+            {
+                SpriteRenderer sr = obj.GameObject.GetComponent<SpriteRenderer>();
+                sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, 0.5f);
+            }
         }
     }
 
@@ -394,6 +408,7 @@ public class LevelEditorController : MonoBehaviour {
                 }
 
                 levelLoader.LoadLevel(levelTiles);
+                ChangeLayer("0");
 
                 Debug.Log("Loaded " + loadfilepath);
             }
