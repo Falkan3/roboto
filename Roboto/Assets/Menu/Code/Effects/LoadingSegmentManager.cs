@@ -23,7 +23,7 @@ public class LoadingSegmentManager : MonoBehaviour {
         width = height * Camera.main.aspect;
 
         numberOfSegments = Mathf.FloorToInt(width-60 / (segmentObj.rectTransform.rect.width + 30));
-        Debug.Log(width + " segment width: " + segmentObj.rectTransform.rect.width + " capacity: " + numberOfSegments);
+        //Debug.Log(width + " segment width: " + segmentObj.rectTransform.rect.width + " capacity: " + numberOfSegments);
 
         initializeSegments();
 	}
@@ -52,7 +52,6 @@ public class LoadingSegmentManager : MonoBehaviour {
             if (index < numberOfSegments - 1)
             {
                 listOfSegments[index].GetComponent<UIFade>().FadeIn();
-                Debug.Log("Fading in segment: " + index);
                 index++;
             }
             else
@@ -74,7 +73,6 @@ public class LoadingSegmentManager : MonoBehaviour {
             if (index < numberOfSegments - 1)
             {
                 listOfSegments[index].GetComponent<UIFade>().FadeOut();
-                Debug.Log("Fading out segment: " + index);
                 index++;
             }
             else

@@ -89,10 +89,13 @@
     <Compile Include="Assets\Menu\Code\Effects\Flash.cs" />
     <Compile Include="Assets\Menu\Code\Effects\LoadingSegmentManager.cs" />
     <Compile Include="Assets\Menu\Code\Effects\Parallax_move.cs" />
+    <Compile Include="Assets\Menu\Code\Effects\Screen_fade.cs" />
     <Compile Include="Assets\Menu\Code\Effects\UIFade.cs" />
+    <Compile Include="Assets\Menu\Code\OnSceneLoad.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Levels\New Map.xml" />
+    <None Include="Assets\Menu\Fonts\airstrike\airstrike.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>
