@@ -29,6 +29,7 @@ public class OnSceneLoad : MonoBehaviour {
 
     void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
     {
-        GameController.GameControllerInstance.FadeAudio_f(4f, GameController.Fade.In);
+        GameController.GameControllerInstance.FadeAudio_break();
+        GameController.GameControllerInstance.FadeAudio_f(1f, GameController.Fade.In);
     }
 }

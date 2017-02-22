@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour {
     //Regex
-    public Regex RGX_number = new Regex("^[0-9]$");
+    public Regex RGX_number = new Regex("^[0-9]{1,}$");
     //Scene to load
     public bool firstBoot = true;
     private Screen_fade screenFade;
@@ -13,7 +13,7 @@ public class GameController : MonoBehaviour {
 
     //Fade
     //Audio
-    public float fadeTime = 4.0f;
+    public float fadeTime = 0.5f;
     public enum Fade { In, Out }
 
     private static GameController instance;
@@ -21,13 +21,17 @@ public class GameController : MonoBehaviour {
     {
         get
         {
-            /*
             if (instance == null)
             {
                 var gB = new GameObject("GameController");
                 instance = gB.AddComponent<GameController>();
+                instance.screenFade = gB.AddComponent<Screen_fade>();
+                instance.screenFade.delay = 4;
+                instance.screenFade.fadeTexture = Resources.Load("Textures/Black") as Texture2D;
+                instance.AudioSource = gB.AddComponent<AudioSource>();
+                instance.AudioSource.loop = true;
+                instance.firstBoot = false;
             }
-            */
             return instance;
         }
     }
@@ -64,7 +68,11 @@ public class GameController : MonoBehaviour {
         ScreenFade = GetComponent<Screen_fade>();
         AudioSource = GetComponent<AudioSource>();
         if(firstBoot == true)
-            GameControllerInstance.StartCoroutine(GameControllerInstance.FadeAudio_LoadScene(GameControllerInstance.fadeTime, Fade.Out, null, 1));
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1);
+            FadeAudio_f(fadeTime, Fade.In);
+        }
+            
     }
 
     void Awake()
@@ -78,16 +86,22 @@ public class GameController : MonoBehaviour {
         {
             int index;
             int.TryParse(input, out index);
-            GameControllerInstance.StartCoroutine(GameControllerInstance.FadeAudio_LoadScene(GameControllerInstance.fadeTime, Fade.Out, null, index));
+            //GameControllerInstance.StartCoroutine(GameControllerInstance.FadeAudio_LoadScene(GameControllerInstance.fadeTime, Fade.Out, null, index));
+
+            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(index);
         }
         else
         {
-            GameControllerInstance.StartCoroutine(GameControllerInstance.FadeAudio_LoadScene(GameControllerInstance.fadeTime, Fade.Out, input, -1));
+            //GameControllerInstance.StartCoroutine(GameControllerInstance.FadeAudio_LoadScene(GameControllerInstance.fadeTime, Fade.Out, input, -1));
+
+            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(input);
         }
+        FadeAudio_f(fadeTime, Fade.Out);
     }
 
     //Helpers
 
+    /*
     IEnumerator FadeAudio_LoadScene(float timer, Fade fadeType, string inputString, int inputInt)
     {
         float start = fadeType == Fade.In ? 0.0f : 1.0f;
@@ -107,17 +121,23 @@ public class GameController : MonoBehaviour {
         else
             UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(inputString);
 
-        GameControllerInstance.ScreenFade.enabled = true;
+        GameControllerInstance.ScreenFade.FadeInit(Screen_fade.Fade.Out, 1f);
     }
+    */
 
     public void FadeAudio_f(float timer, Fade fadeType)
     {
         GameControllerInstance.StartCoroutine(FadeAudio(timer, fadeType));
     }
 
+    public void FadeAudio_break()
+    {
+        StopCoroutine("FadeAudio");
+    }
+
     IEnumerator FadeAudio(float timer, Fade fadeType)
     {
-        float start = fadeType == Fade.In ? 0.0f : 1.0f;
+        float start = fadeType == Fade.In ? AudioSource.volume : 1.0f;
         float end = fadeType == Fade.In ? 1.0f : 0.0f;
         float i = 0.0f;
         float step = 1.0f / timer;

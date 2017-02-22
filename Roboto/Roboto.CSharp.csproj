@@ -78,6 +78,7 @@
     <Compile Include="Assets\Camera\Aspect.cs" />
     <Compile Include="Assets\Camera\MoveCamera.cs" />
     <Compile Include="Assets\GameController\Code\GameController.cs" />
+    <Compile Include="Assets\GameController\Code\OnSceneLoad.cs" />
     <Compile Include="Assets\Gameplay\Code\SortingOrderOnlyStart.cs" />
     <Compile Include="Assets\LevelEditor\Code\EditorTile.cs" />
     <Compile Include="Assets\LevelEditor\Code\LevelEditorController.cs" />
@@ -91,9 +92,10 @@
     <Compile Include="Assets\Menu\Code\Effects\Parallax_move.cs" />
     <Compile Include="Assets\Menu\Code\Effects\Screen_fade.cs" />
     <Compile Include="Assets\Menu\Code\Effects\UIFade.cs" />
-    <Compile Include="Assets\Menu\Code\OnSceneLoad.cs" />
+    <Compile Include="Assets\Menu\Code\MenuController.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Levels\Demo.xml" />
     <None Include="Assets\Levels\New Map.xml" />
     <None Include="Assets\Menu\Fonts\airstrike\airstrike.txt" />
   </ItemGroup>

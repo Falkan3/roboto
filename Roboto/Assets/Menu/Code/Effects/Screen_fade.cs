@@ -8,6 +8,7 @@ public class Screen_fade : MonoBehaviour {
     private float alpha = 1f;
     private float fadeDir = -1f;
     public float delay;
+    public enum Fade { In, Out };
 
     // Use this for initialization
     void Start () {
@@ -32,5 +33,21 @@ public class Screen_fade : MonoBehaviour {
             GUI.color = Color.white;
             this.enabled = false;
         }
+    }
+
+    public void FadeInit(Fade fade, float delay)
+    {
+        if (fade == Fade.In)
+        {
+            alpha = 0f;
+            fadeDir = 1f;
+        }
+        else
+        {
+            alpha = 1f;
+            fadeDir = -1f;
+        }
+        this.enabled = true;
+            
     }
 }

@@ -46,12 +46,21 @@ public class LevelEditorController : MonoBehaviour {
     private GameObject navigationPanel;
     private GameObject optionsPanel;
     private GameObject tilePanel;
+    //inputs
+    private InputField Input_LevelName;
+    private InputField Input_LevelWidth;
+    private InputField Input_LevelHeight;
+    private InputField Input_Layer;
     //The text that shows tile coordinates
     private Text coordinatesText;
     //The text that shows tile layer
     private Text layerText;
     //Regex for only numbers
-    Regex numberRGX = new Regex("^[0-9]$");
+    Regex numberRGX = new Regex("^[0-9]{1,}$");
+    Regex nonSpecialCharRGX = new Regex("^[a-zA-Z0-9]{1,20}$");
+    //Click counter to delay spam
+    private float clickCounter = 0.0f;
+    private float clickCounterDelay = 0.02f;
 
     //Main
     //Tile object in prefab panel
@@ -76,20 +85,33 @@ public class LevelEditorController : MonoBehaviour {
 	void Update () {
         moveEditorTexture();
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) || Input.GetMouseButton(0))
         {
-            Debug.Log("Pressed left click.");
-            if(!EventSystem.current.IsPointerOverGameObject())
+            if (clickCounter >= clickCounterDelay)
             {
-                PlaceTile();
+                if (!EventSystem.current.IsPointerOverGameObject())
+                {
+                    PlaceTile();
+                }
+
+                clickCounter = 0;
             }
         }
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1) || Input.GetMouseButton(1))
         {
-            ResetActiveTile();
-            RemoveTile();
+            if (clickCounter >= clickCounterDelay)
+            {
+                ResetActiveTile();
+                if (!EventSystem.current.IsPointerOverGameObject())
+                {
+                    RemoveTile();
+                }
+            }
         }
         if (Input.GetMouseButtonDown(2)) Debug.Log("Pressed middle click.");
+
+        if(clickCounter <= clickCounterDelay)
+            clickCounter += Time.deltaTime;
     }
 
     void moveEditorTexture()
@@ -125,6 +147,13 @@ public class LevelEditorController : MonoBehaviour {
         editorTextureRenderer = editorTexture.GetComponent<SpriteRenderer>();
         editorDefaultSprite = editorTextureRenderer.sprite;
         editorDefaultColor = editorTextureRenderer.color;
+
+        Input_LevelName = GameObject.Find("InputMapName").GetComponent<InputField>();
+        Input_LevelWidth = GameObject.Find("InputLevelWidth").GetComponent<InputField>();
+        Input_LevelHeight = GameObject.Find("InputLevelHeight").GetComponent<InputField>();
+        Input_Layer = GameObject.Find("InputTileLayer").GetComponent<InputField>();
+
+        ApplySettings();
 
         initializeTileSelector();
     }
@@ -196,7 +225,8 @@ public class LevelEditorController : MonoBehaviour {
 
     public void SetMapName(string name)
     {
-        mapname = name;
+        if(nonSpecialCharRGX.IsMatch(name))
+            mapname = name;
     }
 
     public void ChangeLevelWidth(string width)
@@ -204,6 +234,7 @@ public class LevelEditorController : MonoBehaviour {
         if (numberRGX.IsMatch(width))
         {
             int.TryParse(width, out levelWidth);
+            ApplySettings();
         }
     }
 
@@ -212,6 +243,7 @@ public class LevelEditorController : MonoBehaviour {
         if (numberRGX.IsMatch(height))
         {
             int.TryParse(height, out levelHeight);
+            ApplySettings();
         }
     }
 
@@ -235,12 +267,18 @@ public class LevelEditorController : MonoBehaviour {
                 SpriteRenderer sr = obj.GameObject.GetComponent<SpriteRenderer>();
                 sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, 0.5f);
             }
+
+            ApplySettings();
         }
     }
 
     public void ApplySettings()
     {
         resizeLevelBoundaries();
+        Input_LevelName.text = mapname;
+        Input_LevelWidth.text = levelWidth.ToString();
+        Input_LevelHeight.text = levelHeight.ToString();
+        Input_Layer.text = tileLayer.ToString();
     }
 
     public void ChangeActiveTile(int ind, GameObject obj, int tileIndex)
