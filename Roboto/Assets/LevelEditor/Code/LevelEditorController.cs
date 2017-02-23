@@ -281,6 +281,11 @@ public class LevelEditorController : MonoBehaviour {
         Input_Layer.text = tileLayer.ToString();
     }
 
+    public void ExitToMainMenu()
+    {
+        GameController.GameControllerInstance.GM_LoadScene("1");
+    }
+
     public void ChangeActiveTile(int ind, GameObject obj, int tileIndex)
     {
         activeTileIndex = ind;
@@ -421,7 +426,7 @@ public class LevelEditorController : MonoBehaviour {
     {
         try
         {
-            string loadfilepath = EditorUtility.OpenFilePanel("Load a main map", Application.dataPath + "/Levels", "xml");
+            string loadfilepath = EditorUtility.OpenFilePanel("Load a map", Application.dataPath + "/Levels", "xml");
             Debug.Log("Loading level: " + loadfilepath);
 
             if (File.Exists(loadfilepath))

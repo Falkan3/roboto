@@ -79,6 +79,8 @@
     <Compile Include="Assets\Camera\MoveCamera.cs" />
     <Compile Include="Assets\GameController\Code\GameController.cs" />
     <Compile Include="Assets\GameController\Code\OnSceneLoad.cs" />
+    <Compile Include="Assets\Gameplay\Code\LevelController.cs" />
+    <Compile Include="Assets\Gameplay\Code\SortingOrderAlways.cs" />
     <Compile Include="Assets\Gameplay\Code\SortingOrderOnlyStart.cs" />
     <Compile Include="Assets\LevelEditor\Code\EditorTile.cs" />
     <Compile Include="Assets\LevelEditor\Code\LevelEditorController.cs" />

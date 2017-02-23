@@ -11,6 +11,8 @@ public class GameController : MonoBehaviour {
     private Screen_fade screenFade;
     private AudioSource audioSource;
 
+    private string selectedLevelPath;
+
     //Fade
     //Audio
     public float fadeTime = 0.5f;
@@ -59,6 +61,19 @@ public class GameController : MonoBehaviour {
         set
         {
             screenFade = value;
+        }
+    }
+
+    public string SelectedLevelPath
+    {
+        get
+        {
+            return selectedLevelPath;
+        }
+
+        set
+        {
+            selectedLevelPath = value;
         }
     }
 

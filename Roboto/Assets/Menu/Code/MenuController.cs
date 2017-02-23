@@ -18,4 +18,19 @@ public class MenuController : MonoBehaviour {
     {
         GameController.GameControllerInstance.GM_LoadScene(input);
     }
+
+    public void LoadLevel()
+    {
+        try
+        {
+            string loadfilepath = UnityEditor.EditorUtility.OpenFilePanel("Load a map", Application.dataPath + "/Levels", "xml");
+            Debug.Log("Selected level: " + loadfilepath);
+            GameController.GameControllerInstance.SelectedLevelPath = loadfilepath;
+            GameController.GameControllerInstance.GM_LoadScene("Level");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.Log("Failure selecting level: " + ex);
+        }
+    }
 }
