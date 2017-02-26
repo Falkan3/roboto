@@ -101,11 +101,16 @@ public class LevelEditorController : MonoBehaviour {
         {
             if (clickCounter >= clickCounterDelay)
             {
-                ResetActiveTile();
                 if (!EventSystem.current.IsPointerOverGameObject())
                 {
-                    RemoveTile();
-                }
+                    if (activeTileIndex == -1)
+                        RemoveTile();
+                    else
+                    {
+                        ResetActiveTile();
+                        clickCounter = -0.5f;
+                    }
+                }    
             }
         }
         if (Input.GetMouseButtonDown(2)) Debug.Log("Pressed middle click.");
@@ -391,8 +396,14 @@ public class LevelEditorController : MonoBehaviour {
     {
         if (!string.IsNullOrEmpty(mapname))
         {
+            string savefilepath = EditorUtility.SaveFilePanel("Save the map", Application.dataPath + "/Levels", "New Map", "xml");
+            /*
+            bool agreement = true;
+            if(File.Exists(savefilepath))
+                agreement = EditorUtility.DisplayDialog("Warning!", "Selected file exists. Do you want to overwrite it?", "Yes", "No");
+            */
             List<SerializableTile> temp = new List<SerializableTile>();
-            foreach(CombinedTile item in levelTiles)
+            foreach (CombinedTile item in levelTiles)
             {
                 SerializableTile tempTile = new SerializableTile(item.Tile.Index, item.Tile.Name, item.Tile.Rotation, item.Tile.Layer, item.Tile.X, item.Tile.Y, item.Tile.Dimensions, item.Tile.Category);
                 temp.Add(tempTile);
@@ -416,7 +427,7 @@ public class LevelEditorController : MonoBehaviour {
             fStream.Close();
 
             string result = XElement.Parse(Encoding.ASCII.GetString(streamer.GetBuffer()).Replace("\0", "")).ToString();
-            Debug.Log("Saved level. Serialized Result: " + result);
+            Debug.Log("Saved level. Serialized Result: " + result);  
         }
         else
             Debug.Log("Map name can't be empty in order to save it.");

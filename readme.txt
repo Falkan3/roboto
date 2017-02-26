@@ -9,3 +9,7 @@ SciFi tileset
 Buch
 http://blog-buch.rhcloud.com
 http://opengameart.org/content/sci-fi-interior-tiles
+
+Smooth camera
+Ryan Nielson
+https://github.com/RyanNielson/PixelCamera2D

@@ -76,10 +76,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Camera\Aspect.cs" />
-    <Compile Include="Assets\Camera\MoveCamera.cs" />
+    <Compile Include="Assets\Camera\MoveCameraAuto.cs" />
+    <Compile Include="Assets\Camera\MoveCameraManually.cs" />
     <Compile Include="Assets\GameController\Code\GameController.cs" />
     <Compile Include="Assets\GameController\Code\OnSceneLoad.cs" />
+    <Compile Include="Assets\Gameplay\Code\Entity.cs" />
     <Compile Include="Assets\Gameplay\Code\LevelController.cs" />
+    <Compile Include="Assets\Gameplay\Code\PlayerController.cs" />
     <Compile Include="Assets\Gameplay\Code\SortingOrderAlways.cs" />
     <Compile Include="Assets\Gameplay\Code\SortingOrderOnlyStart.cs" />
     <Compile Include="Assets\LevelEditor\Code\EditorTile.cs" />
@@ -95,6 +98,8 @@
     <Compile Include="Assets\Menu\Code\Effects\Screen_fade.cs" />
     <Compile Include="Assets\Menu\Code\Effects\UIFade.cs" />
     <Compile Include="Assets\Menu\Code\MenuController.cs" />
+    <Compile Include="Assets\PixelCamera2D\Scripts\PixelCamera2D.cs" />
+    <Compile Include="Assets\PixelCamera2D\Scripts\PixelCamera2DBehaviour.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Levels\Demo.xml" />
