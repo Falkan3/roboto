@@ -4,13 +4,11 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
-using UnityEditor;
 using System.Runtime.Serialization;
 using System.Xml.Linq;
 using System.Text;
-using System.Xml.Serialization;
+using System.Collections;
 
 public class LevelEditorController : MonoBehaviour {
     //General
@@ -69,6 +67,18 @@ public class LevelEditorController : MonoBehaviour {
     //List of tiles in level, it stores the tile class object and corresponding gameobject
     public List<CombinedTile> levelTiles = new List<CombinedTile>();
     //the list of available prefabs is contained in LevelLoader
+
+    //File panels
+    /*
+    ExtensionFilter[] extensionOpen = new[] {
+    new ExtensionFilter("XML Files", "xml" ),
+    new ExtensionFilter("All Files", "*" ),
+    };
+    ExtensionFilter[] extenstionSave = new[] {
+    new ExtensionFilter("Binary", "bin"),
+    new ExtensionFilter("Text", "txt"),
+};
+*/
 
 
     // Use this for initialization
@@ -392,52 +402,112 @@ public class LevelEditorController : MonoBehaviour {
         levelTiles.Clear();
     }
 
-    public void SaveMap()
+    //Saving
+
+    public void SaveMapClick()
     {
         if (!string.IsNullOrEmpty(mapname))
         {
-            string savefilepath = EditorUtility.SaveFilePanel("Save the map", Application.dataPath + "/Levels", "New Map", "xml");
-            /*
-            bool agreement = true;
-            if(File.Exists(savefilepath))
-                agreement = EditorUtility.DisplayDialog("Warning!", "Selected file exists. Do you want to overwrite it?", "Yes", "No");
-            */
-            List<SerializableTile> temp = new List<SerializableTile>();
-            foreach (CombinedTile item in levelTiles)
+            string savefilepath = Application.persistentDataPath + "/" + mapname + ".xml";
+            if (File.Exists(savefilepath))
             {
-                SerializableTile tempTile = new SerializableTile(item.Tile.Index, item.Tile.Name, item.Tile.Rotation, item.Tile.Layer, item.Tile.X, item.Tile.Y, item.Tile.Dimensions, item.Tile.Category);
-                temp.Add(tempTile);
+                if (!GameController.GameControllerInstance.AlertPanel.activeSelf)
+                {
+                    GameController.GameControllerInstance.displayAlert("File exists", "Do you want to overwrite the file?", true);
+                    StopCoroutine(AwaitAlertResult());
+                    StartCoroutine(AwaitAlertResult());
+                }
             }
-            CompleteLevel cl = new CompleteLevel(new MapInfo(mapname, levelWidth, levelHeight), temp);
-
-            FileStream fStream = File.Create(Application.dataPath + "/Levels/" + mapname + ".xml");
-
-            //Serialize to xml
-            DataContractSerializer bf = new DataContractSerializer(cl.GetType());
-            MemoryStream streamer = new MemoryStream();
-
-            //Serialize the file
-            bf.WriteObject(streamer, cl);
-            streamer.Seek(0, SeekOrigin.Begin);
-
-            //Save to disk
-            fStream.Write(streamer.GetBuffer(), 0, streamer.GetBuffer().Length);
-
-            // Close the file to prevent any corruptions
-            fStream.Close();
-
-            string result = XElement.Parse(Encoding.ASCII.GetString(streamer.GetBuffer()).Replace("\0", "")).ToString();
-            Debug.Log("Saved level. Serialized Result: " + result);  
+            else
+                SaveMap(savefilepath);
         }
         else
+        {
             Debug.Log("Map name can't be empty in order to save it.");
+            GameController.GameControllerInstance.displayAlert("Error", "Map name can't be empty in order to be saved.", false);
+        }   
     }
 
-    public void LoadMap()
+    IEnumerator AwaitAlertResult()
+    {
+        yield return StartCoroutine(GameController.GameControllerInstance.AlertResult());
+
+        if (GameController.GameControllerInstance.Result != null)
+        {
+            Debug.Log(GameController.GameControllerInstance.Result);
+            if (GameController.GameControllerInstance.Result == "OK")
+                SaveMap(Application.persistentDataPath + "/" + mapname + ".xml");
+            GameController.GameControllerInstance.resetAlertResult();
+        }
+        yield break;
+    }
+
+    public void SaveMap(string savefilepath)
+    {
+        //string savefilepath = StandaloneFileBrowser.SaveFilePanel("Save the map", "", "New Map", extenstionSave);
+        //string savefilepath = EditorUtility.SaveFilePanel("Save the map", Application.dataPath + "/Levels", "New Map", "xml");
+        List<SerializableTile> temp = new List<SerializableTile>();
+        foreach (CombinedTile item in levelTiles)
+        {
+            SerializableTile tempTile = new SerializableTile(item.Tile.Index, item.Tile.Name, item.Tile.Rotation, item.Tile.Layer, item.Tile.X, item.Tile.Y, item.Tile.Dimensions, item.Tile.Category);
+            temp.Add(tempTile);
+        }
+        CompleteLevel cl = new CompleteLevel(new MapInfo(mapname, levelWidth, levelHeight), temp);
+
+        FileStream fStream = File.Create(savefilepath);
+
+        //Serialize to xml
+        DataContractSerializer bf = new DataContractSerializer(cl.GetType());
+        MemoryStream streamer = new MemoryStream();
+
+        //Serialize the file
+        bf.WriteObject(streamer, cl);
+        streamer.Seek(0, SeekOrigin.Begin);
+
+        //Save to disk
+        fStream.Write(streamer.GetBuffer(), 0, streamer.GetBuffer().Length);
+
+        // Close the file to prevent any corruptions
+        fStream.Close();
+
+        string result = XElement.Parse(Encoding.ASCII.GetString(streamer.GetBuffer()).Replace("\0", "")).ToString();
+        Debug.Log("Saved level. Saved tiles: " + temp.Count + " Serialized Result: " + result);
+    }
+
+    //Loading
+
+    public void LoadMapClick()
+    {
+        if (!GameController.GameControllerInstance.FileDialogPanel.activeSelf)
+        {
+            GameController.GameControllerInstance.displayFileDialog("Choose a map to load");
+            StartCoroutine(AwatFileDialogResult());
+            StopCoroutine(AwatFileDialogResult());
+        }
+    }
+
+    IEnumerator AwatFileDialogResult()
+    {
+        yield return StartCoroutine(GameController.GameControllerInstance.DialogResult());
+
+        if (GameController.GameControllerInstance.SelectedFile != null)
+        {
+            if (GameController.GameControllerInstance.SelectedFile != "CANCEL")
+            {
+                Debug.Log(GameController.GameControllerInstance.SelectedFile);
+                LoadMap(Application.persistentDataPath + "/" + GameController.GameControllerInstance.SelectedFile);
+            }
+            GameController.GameControllerInstance.resetDialogResult();
+        }
+        yield break;
+    }
+
+    public void LoadMap(string loadfilepath)
     {
         try
         {
-            string loadfilepath = EditorUtility.OpenFilePanel("Load a map", Application.dataPath + "/Levels", "xml");
+            //string loadfilepath = StandaloneFileBrowser.OpenFilePanel("Load a map", "", extensionOpen, false)[0];
+            //string loadfilepath = EditorUtility.OpenFilePanel("Load a map", Application.dataPath + "/Levels", "xml");
             Debug.Log("Loading level: " + loadfilepath);
 
             if (File.Exists(loadfilepath))

@@ -3,9 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MenuController : MonoBehaviour {
+    //File panels
+    /*
+    ExtensionFilter[] extensionOpen = new[] {
+    new ExtensionFilter("XML Files", "xml" ),
+    new ExtensionFilter("All Files", "*" ),
+    };
+    */
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
 		
 	}
 	
@@ -14,16 +21,42 @@ public class MenuController : MonoBehaviour {
 		
 	}
 
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+
     public void LoadScene(string input)
     {
         GameController.GameControllerInstance.GM_LoadScene(input);
     }
 
-    public void LoadLevel()
+    public void LoadLevelClick()
+    {
+        GameController.GameControllerInstance.displayFileDialog("Choose a map to load");
+        StartCoroutine(AwatFileDialogResult());
+    }
+
+    public IEnumerator AwatFileDialogResult()
+    {
+        yield return StartCoroutine(GameController.GameControllerInstance.DialogResult());
+
+        if (GameController.GameControllerInstance.SelectedFile != null)
+        {
+            if (GameController.GameControllerInstance.SelectedFile != "CANCEL")
+            {
+                Debug.Log(GameController.GameControllerInstance.SelectedFile);
+                LoadLevel(Application.persistentDataPath + "/" + GameController.GameControllerInstance.SelectedFile);
+            }
+            GameController.GameControllerInstance.resetDialogResult();
+        }
+        yield break;
+    }
+
+    public void LoadLevel(string loadfilepath)
     {
         try
         {
-            string loadfilepath = UnityEditor.EditorUtility.OpenFilePanel("Load a map", Application.dataPath + "/Levels", "xml");
             if(string.IsNullOrEmpty(loadfilepath))
             {
                 Debug.Log("Selected file is invalid: " + loadfilepath);

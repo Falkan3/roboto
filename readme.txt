@@ -13,3 +13,7 @@ http://opengameart.org/content/sci-fi-interior-tiles
 Smooth camera
 Ryan Nielson
 https://github.com/RyanNielson/PixelCamera2D
+
+Music
+Kevin MacLeod
+https://incompetech.com/

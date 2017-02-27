@@ -31,5 +31,6 @@ public class OnSceneLoad : MonoBehaviour {
     {
         GameController.GameControllerInstance.FadeAudio_break();
         GameController.GameControllerInstance.FadeAudio_f(1f, GameController.Fade.In);
+        this.enabled = false;
     }
 }

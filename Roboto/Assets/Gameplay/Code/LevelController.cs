@@ -25,32 +25,68 @@ public class LevelController : MonoBehaviour {
             GameController.GameControllerInstance.GM_LoadScene("1");
 
         LoadMap(levelToLoadPath);
-        MapInit(); 
+        MapInit();
 	}
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetButtonDown("Cancel"))
         {
-            if(UnityEditor.EditorUtility.DisplayDialog("Return to menu", "Do you want to return to the main menu?", "Yes", "No"))
+            if(!GameController.GameControllerInstance.AlertPanel.activeSelf)
+            {
+                //if(UnityEditor.EditorUtility.DisplayDialog("Return to menu", "Do you want to return to the main menu?", "Yes", "No"))
+                StopCoroutine(AwaitAlertResult());
+                GameController.GameControllerInstance.displayAlert("Return to menu", "Do you want to return to the main menu?", true);
+                StartCoroutine(AwaitAlertResult());
+            } 
+        }  
+    }
+
+    IEnumerator AwaitAlertResult()
+    {
+        Debug.Log("f() started");
+        yield return StartCoroutine(GameController.GameControllerInstance.AlertResult());
+        Debug.Log("f() is done");
+        if (GameController.GameControllerInstance.Result != null)
+        {
+            if (GameController.GameControllerInstance.Result == "OK")
                 ReturnToMenu();
+            GameController.GameControllerInstance.resetAlertResult();
         }
-            
     }
 
     void ReturnToMenu(string error = null)
     {
         if(error != null)
         {
-            UnityEditor.EditorUtility.DisplayDialog("Error!", error, "Return to menu");
+            //UnityEditor.EditorUtility.DisplayDialog("Error!", error, "Return to menu");
+            GameController.GameControllerInstance.displayAlert("Error!", error, false);
         }
         GameController.GameControllerInstance.GM_LoadScene("1");
     }
 
     void WinGame()
     {
-        UnityEditor.EditorUtility.DisplayDialog("Error!", "Congratulations! You have completed this level successfully.", "Return to menu");
-        GameController.GameControllerInstance.GM_LoadScene("1");
+        if (!GameController.GameControllerInstance.AlertPanel.activeSelf)
+        {
+            StopCoroutine(AwaitAlertResult_Win());
+            //UnityEditor.EditorUtility.DisplayDialog("Error!", "Congratulations! You have completed this level successfully.", "Return to menu");
+            GameController.GameControllerInstance.displayAlert("Return to menu", "Do you want to return to the main menu?", true);
+            StartCoroutine(AwaitAlertResult_Win());
+        }   
+    }
+
+    IEnumerator AwaitAlertResult_Win()
+    {
+        Debug.Log("f() started");
+        yield return StartCoroutine(GameController.GameControllerInstance.AlertResult());
+        Debug.Log("f() is done");
+        if (GameController.GameControllerInstance.Result != null)
+        {
+            if (GameController.GameControllerInstance.Result == "OK")
+                ReturnToMenu();
+            GameController.GameControllerInstance.resetAlertResult();
+        }
     }
 
     void LoadMap(string path)
@@ -81,7 +117,7 @@ public class LevelController : MonoBehaviour {
         catch (System.Exception ex)
         {
             Debug.Log("Failure during loading the level. Error: " + ex);
-            GameController.GameControllerInstance.GM_LoadScene("1");
+            ReturnToMenu("Failure during loading the level. Error: " + ex);
         }
     }
 
@@ -130,14 +166,12 @@ public class LevelController : MonoBehaviour {
         }
 
         //Invoke function checking for victory
-        InvokeRepeating("MapCheckWin", 0f, 1.0f);
+        if(FinishTiles.Length > 0 && Crates.Length > 0)
+            InvokeRepeating("MapCheckWin", 0f, 1.0f);
     }
 
     void MapCheckWin()
     {
-        Debug.Log("Checking for win...");
-        Debug.Log(FinishTiles[1].GameObject.name);
-        string temp = "";
         bool win = true;
 
         for(int i=0; i<FinishTiles.Length; i++)
@@ -145,7 +179,6 @@ public class LevelController : MonoBehaviour {
             for(int j=0; j<Crates.Length; j++)
             {
                 float distance = Vector2.Distance(Crates[j].GameObject.transform.position, FinishTiles[i].GameObject.transform.position);
-                Debug.Log("Tile " + FinishTiles[i].GameObject.name + " distance to " + Crates[j].GameObject.name + " is: " + distance);
                 if (distance <= 0.1f)
                 {
                     WinArray[i] = true;
@@ -155,10 +188,7 @@ public class LevelController : MonoBehaviour {
                     WinArray[i] = false;
             }
         }
-        for (int i = 0; i < WinArray.Length; i++)
-        {
-            temp += WinArray[i].ToString() + " ";
-        }
+
         for (int i = 0; i<WinArray.Length; i++)
         {
             if (WinArray[i] == false)
@@ -168,8 +198,6 @@ public class LevelController : MonoBehaviour {
             }
                 
         }
-        temp += win.ToString();
-        Debug.Log(temp);
         if (win)
             WinGame();
     }
