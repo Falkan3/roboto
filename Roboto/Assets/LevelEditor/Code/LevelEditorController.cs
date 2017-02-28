@@ -303,17 +303,20 @@ public class LevelEditorController : MonoBehaviour {
 
     public void ChangeActiveTile(int ind, GameObject obj, int tileIndex)
     {
-        activeTileIndex = ind;
-        activeObject = obj;
-        activeObjectIndex = tileIndex;
-        activeObjectProperties = obj.GetComponent<TileInitiator>().tile;
-        SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
-        Debug.Log("selected tile with index: " + ind + " obj: " + obj.name + " sprite renderer: " + newSprite.sprite + " tile index: " + activeObjectIndex);
-        editorTexture.transform.localScale = new Vector3(1, 1, 1);
-        editorTextureRenderer.sprite = newSprite.sprite;
-        editorTextureRenderer.color = newSprite.color;
+        if(ind != -1 && obj != null)
+        {
+            activeTileIndex = ind;
+            activeObject = obj;
+            activeObjectIndex = tileIndex;
+            activeObjectProperties = obj.GetComponent<TileInitiator>().tile;
+            SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
+            Debug.Log("selected tile with index: " + ind + " obj: " + obj.name + " sprite renderer: " + newSprite.sprite + " tile index: " + activeObjectIndex);
+            editorTexture.transform.localScale = new Vector3(1, 1, 1);
+            editorTextureRenderer.sprite = newSprite.sprite;
+            editorTextureRenderer.color = newSprite.color;
 
-        tileRotation = 0;
+            tileRotation = 0;
+        }
     }
 
     public void ResetActiveTile()

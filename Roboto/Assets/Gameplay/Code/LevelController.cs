@@ -69,9 +69,9 @@ public class LevelController : MonoBehaviour {
     {
         if (!GameController.GameControllerInstance.AlertPanel.activeSelf)
         {
-            StopCoroutine(AwaitAlertResult_Win());
+            StopCoroutine(AwaitAlertResult_Win()); CancelInvoke("MapCheckWin");
             //UnityEditor.EditorUtility.DisplayDialog("Error!", "Congratulations! You have completed this level successfully.", "Return to menu");
-            GameController.GameControllerInstance.displayAlert("Return to menu", "Do you want to return to the main menu?", true);
+            GameController.GameControllerInstance.displayAlert("Congratulations!", "Level passed. Return to menu?", true);
             StartCoroutine(AwaitAlertResult_Win());
         }   
     }

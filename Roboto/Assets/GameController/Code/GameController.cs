@@ -22,6 +22,11 @@ public class GameController : MonoBehaviour {
     private Text fileDialogTitle;
     private Dropdown fileDialogDropdown;
     private string selectedFile;
+    //Audio components
+    private float maxVolume;
+    private GameObject settingsPanel;
+    private Slider audioSlider;
+    private Toggle audioToggle;
 
     private string selectedLevelPath;
 
@@ -136,6 +141,19 @@ public class GameController : MonoBehaviour {
             alertPanel = value;
         }
     }
+
+    public float MaxVolume
+    {
+        get
+        {
+            return maxVolume;
+        }
+
+        set
+        {
+            maxVolume = value;
+        }
+    }
     #endregion
 
     void Start()
@@ -147,6 +165,14 @@ public class GameController : MonoBehaviour {
     void Awake()
     {
         DontDestroyOnLoad(transform.gameObject);
+    }
+
+    void Update()
+    {
+        if(Input.GetButtonDown("Settings"))
+        {
+            toggleSettingsPanel();
+        }
     }
 
     /// <summary>
@@ -162,12 +188,35 @@ public class GameController : MonoBehaviour {
 
         initAlerts();
         initFileDialogs();
+        initAudioSettings();
+        loadPlayerPrefs();
 
         if (firstBoot == true)
         {
             UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1);
             FadeAudio_f(fadeTime, Fade.In);
         }
+    }
+
+    void loadPlayerPrefs()
+    {
+        //Volume
+        if (PlayerPrefs.HasKey("MaxVolume"))
+            instance.MaxVolume = PlayerPrefs.GetFloat("MaxVolume");
+        else
+            instance.MaxVolume = 1f;
+        instance.audioSlider.value = instance.maxVolume;
+        //Mute
+        if (PlayerPrefs.HasKey("Mute"))
+        {
+            bool temp = bool.Parse(PlayerPrefs.GetString("Mute"));
+            instance.MuteVolume(temp);
+            instance.audioToggle.isOn = temp;
+        }    
+        else
+            instance.audioToggle.isOn = true;
+
+
     }
 
     void initAlerts()
@@ -194,6 +243,14 @@ public class GameController : MonoBehaviour {
         */
 
         FileDialogPanel.SetActive(false);
+    }
+
+    void initAudioSettings()
+    {
+        settingsPanel = GameObject.Find("SettingsPanel");
+        audioSlider = GameObject.Find("AudioSlider").GetComponent<Slider>();
+        audioToggle = GameObject.Find("AudioToggle").GetComponent<Toggle>();
+        settingsPanel.SetActive(false);
     }
 
     static void initInstance(GameController instance, GameObject gB)
@@ -288,6 +345,20 @@ public class GameController : MonoBehaviour {
     }
     */
 
+    public void SetVolume(float val)
+    {
+        instance.audioSource.volume = val;
+        instance.maxVolume = val;
+        PlayerPrefs.SetFloat("MaxVolume", val);
+    }
+
+    public void MuteVolume(bool val)
+    {
+        instance.AudioSource.mute = val;
+        instance.audioToggle.isOn = val;
+        PlayerPrefs.SetString("Mute", val.ToString());
+    }
+
     public void FadeAudio_f(float timer, Fade fadeType)
     {
         GameControllerInstance.StartCoroutine(FadeAudio(timer, fadeType));
@@ -300,12 +371,12 @@ public class GameController : MonoBehaviour {
 
     IEnumerator FadeAudio(float timer, Fade fadeType)
     {
-        float start = fadeType == Fade.In ? AudioSource.volume : 1.0f;
-        float end = fadeType == Fade.In ? 1.0f : 0.0f;
+        float start = fadeType == Fade.In ? AudioSource.volume : instance.maxVolume;
+        float end = fadeType == Fade.In ? instance.maxVolume : 0.0f;
         float i = 0.0f;
-        float step = 1.0f / timer;
+        float step = 1f / timer;
 
-        while (i <= 1.0)
+        while (i <= instance.maxVolume)
         {
             i += step * Time.deltaTime;
             AudioSource.volume = Mathf.Lerp(start, end, i);
@@ -376,7 +447,6 @@ public class GameController : MonoBehaviour {
     public void sendDialogResult(string result)
     {
         instance.SelectedFile = result;
-        instance.FileDialogPanel.SetActive(false);
     }
 
     public void resetDialogResult()
@@ -391,7 +461,18 @@ public class GameController : MonoBehaviour {
         {
             yield return null; // wait until next frame
         }
+        instance.FileDialogPanel.SetActive(false);
         yield break;
+    }
+    #endregion
+
+    #region settings
+    public void toggleSettingsPanel()
+    {
+        if(settingsPanel.activeSelf)
+            settingsPanel.SetActive(false);
+        else
+            settingsPanel.SetActive(true);
     }
     #endregion
 }
