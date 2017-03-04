@@ -123,7 +123,10 @@ public class LevelEditorController : MonoBehaviour {
                 }    
             }
         }
-        if (Input.GetMouseButtonDown(2)) Debug.Log("Pressed middle click.");
+        if (Input.GetMouseButtonDown(2))
+        {
+            RotateTile();
+        }
 
         if(clickCounter <= clickCounterDelay)
             clickCounter += Time.deltaTime;
@@ -388,11 +391,27 @@ public class LevelEditorController : MonoBehaviour {
                     Debug.Log("Tile replaced at " + ray.x + " " + ray.y + " layer: " + tileLayer);
                     Debug.Log("Number of tiles saved: " + levelTiles.Count);
                 }
+                temp.Tile.Rotation = tileRotation;
+                temp.GameObject.transform.rotation = new Quaternion(0, 0, 0, 1);
+                temp.GameObject.transform.Rotate(0, 0, Mathf.Floor(tileRotation * 90));
             }
             else
             {
                 Debug.Log("Editor texture is out of level bounds.");
             }
+        }
+    }
+
+    public void RotateTile()
+    {
+        if (activeTileIndex != -1 && activeObject != null && activeObjectIndex != -1)
+        {
+            tileRotation += 1;
+            if (tileRotation > 3)
+                tileRotation = 0;
+            editorTexture.transform.rotation = new Quaternion(0, 0, 0, 1);
+            editorTexture.transform.Rotate(0, 0, Mathf.Floor(tileRotation * 90));
+            Debug.Log("Rotating tile to " + Mathf.Floor(tileRotation * 90));
         }
     }
 

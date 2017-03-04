@@ -86,6 +86,10 @@ public class LevelLoader : MonoBehaviour {
     {
         tile.GameObject = Instantiate(tile.Tile.TileObject);
         tile.GameObject.transform.position = new Vector2(tile.Tile.X, tile.Tile.Y);
+        tile.GameObject.transform.rotation = new Quaternion(0, 0, 0, 1);
+        tile.GameObject.transform.Rotate(0, 0, 90 * tile.Tile.Rotation);
+        if (tile.Tile.Category == "ConveyorBelt")
+            tile.GameObject.GetComponent<ConveyorBelt>().TileRotation = tile.Tile.Rotation;
 
         Debug.Log("Tile " + tile.Tile.TileObject + " placed at " + tile.Tile.X + " " + tile.Tile.Y + " layer: " + tile.Tile.Layer);
      }

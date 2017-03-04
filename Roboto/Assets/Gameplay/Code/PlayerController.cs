@@ -13,7 +13,7 @@ public class PlayerController : Entity {
     void Start () {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        rb.drag = speed * 5f;
+        //rb.drag = speed * 1.5f;
 
         InitActions();
     }
@@ -50,8 +50,8 @@ public class PlayerController : Entity {
             //transform.position += new Vector3(input_x, input_y).normalized * speed * Time.deltaTime;
             //rb.velocity = new Vector3(input_x, input_y).normalized * speed * Time.deltaTime;
 
-            
-            rb.velocity = new Vector3(input_x, input_y).normalized * speed;
+            if(action == false)
+                rb.AddForce(new Vector3(input_x, input_y).normalized * speed);
         }
 
         //Action
@@ -79,9 +79,9 @@ public class PlayerController : Entity {
                 if (crateRB == null)
                 {
                     crateRB = hit.collider.gameObject.GetComponent<Rigidbody2D>();
-                    crateRB.drag = speed * 5f;
                 }
-                crateRB.velocity = new Vector3(input_x, input_y).normalized * speed;
+                crateRB.AddForce(new Vector3(input_x, input_y).normalized * speed);
+                rb.AddForce(crateRB.velocity);
             }
         }
         else

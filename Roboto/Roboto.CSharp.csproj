@@ -89,6 +89,7 @@
     <Compile Include="Assets\Gameplay\Code\PlayerController.cs" />
     <Compile Include="Assets\Gameplay\Code\SortingOrderAlways.cs" />
     <Compile Include="Assets\Gameplay\Code\SortingOrderOnlyStart.cs" />
+    <Compile Include="Assets\Gameplay\Code\TileScripts\ConveyorBelt.cs" />
     <Compile Include="Assets\LevelEditor\Code\EditorTile.cs" />
     <Compile Include="Assets\LevelEditor\Code\LevelEditorController.cs" />
     <Compile Include="Assets\LevelEditor\Code\LevelLoader.cs" />
