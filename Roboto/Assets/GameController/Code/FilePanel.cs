@@ -4,12 +4,12 @@ using UnityEngine;
 using System.IO;
 
 public class FilePanel {
-    public FileInfo[] ReadFilesInFolder(string folderName)
+    public FileInfo[] ReadFilesInFolder(string folderName, string pattern="")
     {
         try
         {
-            DirectoryInfo info = new DirectoryInfo(Application.persistentDataPath + "/" + folderName);
-            FileInfo[] files = info.GetFiles();
+            DirectoryInfo info = new DirectoryInfo(folderName);
+            FileInfo[] files = info.GetFiles(pattern);
             return files;
         }
         catch(System.Exception ex)

@@ -42,8 +42,12 @@ public class GameController : MonoBehaviour {
         {
             if (instance == null)
             {
-                var gB = new GameObject("GameController");
-                initInstance(instance, gB);
+                GameObject GC = Instantiate(Resources.Load("Prefabs/GameController/GameController") as GameObject);
+                instance = GC.GetComponent<GameController>();
+                instance.firstBoot = false;
+                instance.initComponents();
+                //var gB = new GameObject("GameController");
+                //initInstance(instance, gB);
                 
             }
             return instance;
@@ -158,8 +162,11 @@ public class GameController : MonoBehaviour {
 
     void Start()
     {
-        initComponents();
-        Cursor.SetCursor(Resources.Load("cursor") as Texture2D, Vector2.zero, CursorMode.Auto);
+        if(firstBoot)
+        {
+            initComponents();
+            Cursor.SetCursor(Resources.Load("cursor") as Texture2D, Vector2.zero, CursorMode.Auto);
+        }
     }
 
     void Awake()
@@ -190,6 +197,7 @@ public class GameController : MonoBehaviour {
         initFileDialogs();
         initAudioSettings();
         loadPlayerPrefs();
+        initLevels();
 
         if (firstBoot == true)
         {
@@ -215,8 +223,6 @@ public class GameController : MonoBehaviour {
         }    
         else
             instance.audioToggle.isOn = true;
-
-
     }
 
     void initAlerts()
@@ -251,6 +257,27 @@ public class GameController : MonoBehaviour {
         audioSlider = GameObject.Find("AudioSlider").GetComponent<Slider>();
         audioToggle = GameObject.Find("AudioToggle").GetComponent<Toggle>();
         settingsPanel.SetActive(false);
+    }
+
+    public void initLevels()
+    {
+        string dataPath = Application.persistentDataPath + "/";
+        //string assetPath = "Resources/Levels";
+        TextAsset[] filesToCopy = Resources.LoadAll<TextAsset>("Levels");
+        Debug.Log("Found " + filesToCopy.Length + " levels in resources");
+        System.Xml.XmlDocument xmldoc = new System.Xml.XmlDocument();
+        //FilePanel fp = new FilePanel();
+        //FileInfo[] fileNames = fp.ReadFilesInFolder(assetPath);
+        foreach (TextAsset file in filesToCopy)
+        {
+            xmldoc.LoadXml(file.text);
+            if (!File.Exists(dataPath + "/" + file.name + ".xml"))
+            {
+                // File doesn't exist, move it from assets folder to data directory
+                //File.Copy(assetPath + "/" + file.Name, dataPath + "/" + file.Name);
+                xmldoc.Save(dataPath + "/" + file.name + ".xml");
+            }
+        } 
     }
 
     static void initInstance(GameController instance, GameObject gB)
@@ -315,7 +342,9 @@ public class GameController : MonoBehaviour {
 
             UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(input);
         }
-        GameObject.Find("DialogCanvas").GetComponent<Canvas>().worldCamera = Camera.main;
+        //GameObject.Find("DialogCanvas").GetComponent<Canvas>().worldCamera = Camera.main;
+        resetAlertResult();
+        resetDialogResult();
         FadeAudio_f(fadeTime, Fade.Out);
     }
 
@@ -385,6 +414,7 @@ public class GameController : MonoBehaviour {
     }
 
     #region alert
+    //Alert dialog is a window displaying some text and awaiting for one of two selectable options: yes or no, or just OK if options are given False
     public void displayAlert(string alertTitle, string errorMsg, bool options)
     {
         instance.alertTitle.text = alertTitle;
@@ -405,6 +435,7 @@ public class GameController : MonoBehaviour {
     public void resetAlertResult()
     {
         instance.Result = null;
+        instance.AlertPanel.SetActive(false);
     }
 
     public IEnumerator AlertResult()
@@ -419,6 +450,7 @@ public class GameController : MonoBehaviour {
     #endregion
 
     #region fileDialog
+    //File dialog is a dialog window that awaits for the user input in the form of selecting an item from the dropdown list. The result is saved in SelectedFile
     public void displayFileDialog(string dialogTitle)
     {
         instance.fileDialogDropdown.ClearOptions();
@@ -432,7 +464,7 @@ public class GameController : MonoBehaviour {
         instance.fileDialogTitle.text = dialogTitle;
         List<Dropdown.OptionData> items = new List<Dropdown.OptionData>();
         items.Add(placeholder);
-        FileInfo[] filenames = fp.ReadFilesInFolder("");
+        FileInfo[] filenames = fp.ReadFilesInFolder(Application.persistentDataPath + "/", "*.xml");
         foreach(FileInfo x in filenames)
         {
             Dropdown.OptionData dropdowndata = new Dropdown.OptionData();
@@ -452,6 +484,8 @@ public class GameController : MonoBehaviour {
     public void resetDialogResult()
     {
         instance.SelectedFile = null;
+        instance.FileDialogPanel.SetActive(false);
+
     }
 
     public IEnumerator DialogResult()

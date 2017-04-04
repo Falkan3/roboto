@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class Parallax_move : MonoBehaviour
 {
-    public GameObject panel;
+    public GameObject[] panels;
     public ParallaxObject[] objArray;
 
     [Serializable]
@@ -115,7 +115,11 @@ public class Parallax_move : MonoBehaviour
             objArray[i].DuplicateGameObjRt.localPosition = new Vector3(objArray[i].Rt.rect.xMin - objArray[i].DuplicateGameObjRt.rect.width / 2 + 2, 0);
         }
         //Move panel in hierarchy
-        panel.transform.SetAsLastSibling();
+        for(int i=0; i<panels.Length; i++)
+        {
+            panels[i].transform.SetAsLastSibling();
+        }
+        
         //
     }
 
